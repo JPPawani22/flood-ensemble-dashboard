@@ -1,0 +1,9 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+catboost_info/
+backend/models/*.pkl
+output/*.csv
+output/*.json
