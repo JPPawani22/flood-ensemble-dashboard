@@ -16,9 +16,46 @@ from backend.train_models import train
 DATA_PATH = ROOT / "data" / "sri_lanka_flood_risk_dataset_25000.csv"
 BUNDLE_PATH = ROOT / "backend" / "models" / "training_bundle.pkl"
 
-st.set_page_config(page_title="Sri Lanka Flood Risk | Ensemble Lab", page_icon="🌧️", layout="wide")
-st.title("Sri Lanka Flood Risk · Ensemble Learning Lab")
-st.caption("Compare bagging, boosting, and an ANN based stacking hybrid on tabular data.")
+st.set_page_config(page_title="Flood Risk | Ensemble Lab", page_icon="\U0001F327\uFE0F", layout="wide")
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+:root { color-scheme:dark; --ink:#e6edf5; --muted:#a0b2c5; --teal:#49c5c1; --line:#2b4055; --panel:#14283a; --field:#1b3247; }
+.stApp { background:linear-gradient(180deg,#102235 0,#0b1724 380px,#0b1724 100%); color:var(--ink); }
+html, body, [class*="css"] { font-family:'DM Sans',sans-serif; }
+h1,h2,h3,h4,p,li,label,small { color:var(--ink); }
+h1,h2,h3 { font-family:'Manrope',sans-serif !important; letter-spacing:-.035em; }
+.block-container { max-width:1400px; padding-top:2rem; padding-bottom:3rem; }
+[data-testid="stSidebar"] { background:#101f30; border-right:1px solid var(--line); }
+[data-testid="stSidebar"] * { color:var(--ink); }
+[data-testid="stMetric"] { background:var(--panel); border:1px solid var(--line); padding:1.05rem 1.2rem; border-radius:14px; box-shadow:0 8px 24px rgba(0,0,0,.18); min-height:112px; }
+[data-testid="stMetricLabel"] { color:var(--muted); font-size:.8rem; }
+[data-testid="stMetricValue"] { color:#f2f7fb; font-family:'Manrope',sans-serif; font-size:1.45rem; overflow-wrap:anywhere; }
+[data-testid="stTabs"] [role="tab"] { font-weight:600; }
+[data-testid="stTabs"] [aria-selected="true"] { color:var(--teal); }
+.hero { display:block; width:100%; box-sizing:border-box; background:transparent; color:#f3fbfd; border:0; border-radius:0; padding:1.8rem 0 1.5rem; margin-bottom:1.35rem; box-shadow:none; overflow:visible; }
+.hero h1 { color:#fff !important; font-size:clamp(2.7rem,5vw,4rem); line-height:1.08; margin:0 0 .55rem 0; }
+.hero p { color:#d7edf1; margin:0; font-size:1rem; }
+.eyebrow { display:block; text-transform:uppercase; letter-spacing:.12em; font-size:1rem; line-height:1.5; font-weight:700; color:#72e0d8; margin:0 0 .85rem; padding-top:.1rem; overflow:visible; }
+div[data-testid="stDataFrame"] { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--panel); }
+[data-testid="stWidgetLabel"] p, [data-testid="stCaptionContainer"] p { color:var(--muted) !important; }
+[data-baseweb="input"], [data-baseweb="select"] > div, [data-testid="stNumberInput"] input, [data-testid="stTextInput"] input, [data-testid="stDateInput"] input, [data-testid="stTextArea"] textarea { background:#1b3247 !important; color:#f2f7fb !important; border-color:#456078 !important; }
+[data-baseweb="select"] *, [role="listbox"] *, [role="option"] { color:#f2f7fb !important; }
+[role="listbox"], [data-baseweb="popover"] > div { background:#1b3247 !important; }
+input::placeholder, textarea::placeholder { color:#a0b2c5 !important; }
+button, [data-testid="stFileUploader"] section { border-color:#456078 !important; }
+[data-testid="stButton"] button, [data-testid="stFormSubmitButton"] button { background:#1b3247; color:#f2f7fb; border:1px solid #456078; }
+[data-testid="stButton"] button:hover, [data-testid="stFormSubmitButton"] button:hover { border-color:#49c5c1; color:#ffffff; }
+button[kind="primary"] { background:#087f8c !important; color:#ffffff !important; border-color:#49c5c1 !important; }
+[data-testid="stFileUploader"] section { background:#14283a; }
+[data-testid="stAlert"] { border:1px solid var(--line); }
+[data-testid="stTabs"] button { color:#a0b2c5; }
+hr { border-color:var(--line); }
+a { color:#70d5d0 !important; }
+</style>
+<section class="hero"><div class="eyebrow">Ensemble learning lab | Index 224202B</div>
+<h1>Sri Lanka Flood Risk</h1><p>Compare bagging, boosting, and a neural stacking hybrid on structured data.</p></section>
+""", unsafe_allow_html=True)
 
 with st.sidebar:
     st.header("Dataset")
@@ -78,15 +115,36 @@ tab_compare, tab_explain, tab_predict, tab_about = st.tabs(
 with tab_compare:
     st.subheader("Held-out test set results")
     st.caption("R² higher is better. MSE and RMSE lower are better; both penalize large errors.")
-    st.dataframe(results.style.format({"R2":"{:.3f}", "MSE":"{:.3f}", "RMSE":"{:.3f}"}), use_container_width=True)
-    
     metric = st.selectbox("Compare metric", ["RMSE", "MSE", "R2"])
-    fig, ax = plt.subplots(figsize=(10, 4))
     ranked = results.sort_values(metric, ascending=(metric != "R2"))
-    bars = ax.barh(ranked["Model"], ranked[metric], color=["#0f766e" if x == ranked.iloc[0]["Model"] else "#94a3b8" for x in ranked["Model"]])
-    ax.set_xlabel(metric + (" (higher is better)" if metric == "R2" else " (lower is better)"))
-    ax.grid(axis="x", alpha=.2)
-    st.pyplot(fig)
+    winner = ranked.iloc[0]
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Top model | " + metric, str(winner["Model"]))
+    m2.metric("Best " + metric, f"{winner[metric]:.3f}")
+    m3.metric("Held-out rows", f"{len(bundle['test_actual']):,}" if bundle else "N/A")
+    st.dataframe(results.style.format({"R2":"{:.3f}", "MSE":"{:.3f}", "RMSE":"{:.3f}"})
+                 .set_properties(**{"background-color":"#14283a", "color":"#e6edf5"})
+                 .highlight_max(subset=["R2"], props="background-color:#174b42; color:#ffffff; font-weight:700;")
+                 .highlight_min(subset=["MSE", "RMSE"], props="background-color:#174b42; color:#ffffff; font-weight:700;"),
+                 use_container_width=True, hide_index=True)
+    st.markdown("#### Model ranking")
+    fig, ax = plt.subplots(figsize=(10, 4.2), facecolor="#14283a")
+    bars = ax.barh(ranked["Model"], ranked[metric], color=["#35d0c5" if x == ranked.iloc[0]["Model"] else "#40586d" for x in ranked["Model"]], height=.62)
+    ax.set_facecolor("#14283a")
+    ax.invert_yaxis()
+    ax.set_xlabel(metric + (" (higher is better)" if metric == "R2" else " (lower is better)"), color="#a0b2c5")
+    ax.grid(axis="x", color="#30475b", linewidth=.8)
+    ax.set_axisbelow(True)
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    ax.spines["bottom"].set_color("#456078")
+    ax.tick_params(axis="y", length=0, colors="#f2f7fb", labelsize=10)
+    ax.tick_params(axis="x", colors="#c3d3e0", labelsize=9)
+    for label in ax.get_yticklabels():
+        label.set_fontweight("semibold")
+    ax.bar_label(bars, fmt="%.3f", padding=7, color="#ffffff", fontsize=10, fontweight="bold")
+    fig.tight_layout()
+    st.pyplot(fig, use_container_width=True)
+    plt.close(fig)
     best = results.sort_values("R2", ascending=False).iloc[0]
     st.info(f"Best R² in this held-out split: **{best['Model']}** (R² {best['R2']:.3f}, RMSE {best['RMSE']:.3f}). This describes this split only; it is not evidence of performance on all Sri Lankan locations.")
 
@@ -117,10 +175,20 @@ For text and image inputs, these models need a meaningful feature representation
                 imp = permutation_importance(model, raw_X, raw_y, n_repeats=2,
                                              random_state=42, scoring="r2", n_jobs=-1)
                 imp_df = pd.DataFrame({"Feature": raw_X.columns, "Importance": imp.importances_mean}).nlargest(12, "Importance").sort_values("Importance")
-                fig, ax = plt.subplots(figsize=(8, 4))
-                ax.barh(imp_df["Feature"], imp_df["Importance"], color="#0f766e")
-                ax.set_xlabel("Mean R² drop when shuffled")
-                st.pyplot(fig)
+                fig, ax = plt.subplots(figsize=(8, 4), facecolor="#14283a")
+                ax.set_facecolor("#14283a")
+                bars = ax.barh(imp_df["Feature"], imp_df["Importance"], color="#087f8c", height=.62)
+                ax.set_xlabel("Mean R\u00b2 drop when shuffled", color="#a0b2c5")
+                ax.grid(axis="x", color="#30475b", linewidth=.8)
+                ax.set_axisbelow(True)
+                ax.spines[["top", "right", "left"]].set_visible(False)
+                ax.tick_params(axis="y", length=0, colors="#f2f7fb", labelsize=9)
+                for label in ax.get_yticklabels():
+                    label.set_fontweight("semibold")
+                ax.bar_label(bars, fmt="%.3f", padding=5, fontsize=9, color="#ffffff", fontweight="bold")
+                fig.tight_layout()
+                st.pyplot(fig, use_container_width=True)
+                plt.close(fig)
                 if len(imp_df):
                     st.write(f"The strongest measured signal is **{imp_df.iloc[-1]['Feature']}**. Check whether this makes domain sense and whether it is available at prediction time.")
             except Exception as exc:
